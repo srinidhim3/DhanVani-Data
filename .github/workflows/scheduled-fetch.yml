@@ -3,9 +3,9 @@ name: Fetch NSE Data
 on:
   workflow_dispatch: # Allows manual triggering from the Actions tab
   schedule:
-    # Runs every day at 01:00 UTC. You can adjust the cron schedule as needed.
+    # Runs at the start of every hour. You can adjust the cron schedule as needed.
     # See https://crontab.guru/ for help.
-    - cron: '0 1 * * *'
+    - cron: '0 * * * *'
 
 jobs:
   fetch-data:
