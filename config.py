@@ -1,9 +1,12 @@
 from pathlib import Path
+import os
 
 import parsers
 
 # --- General Configuration ---
-DB_FILE = Path("DhanVani.db")
+# It's recommended to use environment variables for sensitive data like connection strings.
+# Set the DB_CONNECTION_STRING environment variable in your deployment environment.
+DB_CONNECTION_STRING = os.environ.get("DB_CONNECTION_STRING")
 USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
 REQUEST_TIMEOUT = 15
 
@@ -55,154 +58,154 @@ FEEDS_TO_PROCESS = [
         "name": "Announcements",
         "url": URL_ANNOUNCEMENTS,
         "parser": parsers.parse_announcement_entry,
-        "sql": f"""INSERT OR IGNORE INTO {TABLE_NSE_ANNOUNCEMENTS}
+        "sql": f"""INSERT INTO {TABLE_NSE_ANNOUNCEMENTS}
                    (guid, title, link, description, published_at)
-                   VALUES (?, ?, ?, ?, ?)"""
+                   VALUES (%s, %s, %s, %s, %s) ON CONFLICT (guid) DO NOTHING"""
     },
     {
         "name": "Annual Reports",
         "url": URL_ANNUAL_REPORTS,
         "parser": parsers.parse_annual_report_entry,
-        "sql": f"""INSERT OR IGNORE INTO {TABLE_NSE_ANNUAL_REPORTS}
+        "sql": f"""INSERT INTO {TABLE_NSE_ANNUAL_REPORTS}
                    (guid, title, link, report_date)
-                   VALUES (?, ?, ?, ?)"""
+                   VALUES (%s, %s, %s, %s) ON CONFLICT (guid) DO NOTHING"""
     },
     {
         "name": "Board Meetings",
         "url": URL_BOARD_MEETINGS,
         "parser": parsers.parse_board_meeting_entry,
-        "sql": f"""INSERT OR IGNORE INTO {TABLE_NSE_BOARD_MEETINGS}
+        "sql": f"""INSERT INTO {TABLE_NSE_BOARD_MEETINGS}
                    (guid, title, link, meeting_date, published_at)
-                   VALUES (?, ?, ?, ?, ?)"""
+                   VALUES (%s, %s, %s, %s, %s) ON CONFLICT (guid) DO NOTHING"""
     },
     {
         "name": "Business Responsibility and Sustainability Report",
         "url": URL_BRSR,
         "parser": parsers.parse_brsr_report_entry,
-        "sql": f"""INSERT OR IGNORE INTO {TABLE_NSE_BRSR}
+        "sql": f"""INSERT INTO {TABLE_NSE_BRSR}
                    (guid, title, pdf_link, xml_link_name, submission_date)
-                   VALUES (?, ?, ?, ?, ?)"""
+                   VALUES (%s, %s, %s, %s, %s) ON CONFLICT (guid) DO NOTHING"""
     },
     {
         "name": "Corporate Actions",
         "url": URL_CORPORATE_ACTIONS,
         "parser": parsers.parse_corporate_action_entry,
-        "sql": f"""INSERT OR IGNORE INTO {TABLE_NSE_CORPORATE_ACTIONS}
+        "sql": f"""INSERT INTO {TABLE_NSE_CORPORATE_ACTIONS}
                    (guid, title, link, description, published_at, ex_date,
                     series, purpose, face_value, record_date)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT (guid) DO NOTHING"""
     },
     {
         "name": "Insider Trading",
         "url": URL_INSIDER_TRADING,
         "parser": parsers.parse_insider_trading_entry,
-        "sql": f"""INSERT OR IGNORE INTO {TABLE_NSE_INSIDER_TRADING}
+        "sql": f"""INSERT INTO {TABLE_NSE_INSIDER_TRADING}
                    (guid, title, link, security_type, published_at)
-                   VALUES (?, ?, ?, ?, ?)"""
+                   VALUES (%s, %s, %s, %s, %s) ON CONFLICT (guid) DO NOTHING"""
     },
     {
         "name": "Investor Complaints",
         "url": URL_INVESTOR_COMPLAINTS,
         "parser": parsers.parse_investor_complaint_entry,
-        "sql": f"""INSERT OR IGNORE INTO {TABLE_NSE_INVESTOR_COMPLAINTS}
+        "sql": f"""INSERT INTO {TABLE_NSE_INVESTOR_COMPLAINTS}
                    (guid, title, link, quarter_ending_date, published_at)
-                   VALUES (?, ?, ?, ?, ?)"""
+                   VALUES (%s, %s, %s, %s, %s) ON CONFLICT (guid) DO NOTHING"""
     },
     {
         "name": "Offer Documents",
         "url": URL_OFFER_DOCUMENTS,
         "parser": parsers.parse_offer_document_entry,
-        "sql": f"""INSERT OR IGNORE INTO {TABLE_NSE_OFFER_DOCUMENTS}
+        "sql": f"""INSERT INTO {TABLE_NSE_OFFER_DOCUMENTS}
                    (guid, title, link, description, published_at)
-                   VALUES (?, ?, ?, ?, ?)"""
+                   VALUES (%s, %s, %s, %s, %s) ON CONFLICT (guid) DO NOTHING"""
     },
     {
         "name": "Related Party Transactions",
         "url": URL_RELATED_PARTY_TRANSACTIONS,
         "parser": parsers.parse_related_party_transaction_entry,
-        "sql": f"""INSERT OR IGNORE INTO {TABLE_NSE_RELATED_PARTY_TRANSACTIONS}
+        "sql": f"""INSERT INTO {TABLE_NSE_RELATED_PARTY_TRANSACTIONS}
                    (guid, title, link, period_end_date, published_at)
-                   VALUES (?, ?, ?, ?, ?)"""
+                   VALUES (%s, %s, %s, %s, %s) ON CONFLICT (guid) DO NOTHING"""
     },
     {
         "name": "SAST Regulation 29",
         "url": URL_REGULATION29,
         "parser": parsers.parse_regulation29_entry,
-        "sql": f"""INSERT OR IGNORE INTO {TABLE_NSE_REGULATION29}
+        "sql": f"""INSERT INTO {TABLE_NSE_REGULATION29}
                    (guid, title, link, acquirer_name, published_at)
-                   VALUES (?, ?, ?, ?, ?)"""
+                   VALUES (%s, %s, %s, %s, %s) ON CONFLICT (guid) DO NOTHING"""
     },
     {
         "name": "SAST Regulation 31",
         "url": URL_REGULATION31,
         "parser": parsers.parse_regulation31_entry,
-        "sql": f"""INSERT OR IGNORE INTO {TABLE_NSE_REGULATION31}
+        "sql": f"""INSERT INTO {TABLE_NSE_REGULATION31}
                    (guid, title, link, promoter_or_pacs_name, published_at)
-                   VALUES (?, ?, ?, ?, ?)"""
+                   VALUES (%s, %s, %s, %s, %s) ON CONFLICT (guid) DO NOTHING"""
     },
     {
         "name": "Reason for Encumbrance",
         "url": URL_REASON_FOR_ENCUMBRANCE,
         "parser": parsers.parse_reason_for_encumbrance_entry,
-        "sql": f"""INSERT OR IGNORE INTO {TABLE_NSE_REASON_FOR_ENCUMBRANCE}
+        "sql": f"""INSERT INTO {TABLE_NSE_REASON_FOR_ENCUMBRANCE}
                    (guid, title, link, promoter_name, published_at)
-                   VALUES (?, ?, ?, ?, ?)"""
+                   VALUES (%s, %s, %s, %s, %s) ON CONFLICT (guid) DO NOTHING"""
     },
     {
         "name": "Secretarial Compliance",
         "url": URL_SECRETARIAL_COMPLIANCE,
         "parser": parsers.parse_secretarial_compliance_entry,
-        "sql": f"""INSERT OR IGNORE INTO {TABLE_NSE_SECRETARIAL_COMPLIANCE}
+        "sql": f"""INSERT INTO {TABLE_NSE_SECRETARIAL_COMPLIANCE}
                    (guid, title, pdf_link, xml_link, financial_year, submission_type, published_at)
-                   VALUES (?, ?, ?, ?, ?, ?, ?)"""
+                   VALUES (%s, %s, %s, %s, %s, %s, %s) ON CONFLICT (guid) DO NOTHING"""
     },
     {
         "name": "Share Transfers",
         "url": URL_SHARE_TRANSFERS,
         "parser": parsers.parse_share_transfer_entry,
-        "sql": f"""INSERT OR IGNORE INTO {TABLE_NSE_SHARE_TRANSFERS}
+        "sql": f"""INSERT INTO {TABLE_NSE_SHARE_TRANSFERS}
                    (guid, title, link, period_end_date, published_at)
-                   VALUES (?, ?, ?, ?, ?)"""
+                   VALUES (%s, %s, %s, %s, %s) ON CONFLICT (guid) DO NOTHING"""
     },
     {
         "name": "Shareholding Pattern",
         "url": URL_SHAREHOLDING_PATTERN,
         "parser": parsers.parse_shareholding_pattern_entry,
-        "sql": f"""INSERT OR IGNORE INTO {TABLE_NSE_SHAREHOLDING_PATTERN}
+        "sql": f"""INSERT INTO {TABLE_NSE_SHAREHOLDING_PATTERN}
                    (guid, title, link, as_on_date, promoter_holding, public_holding,
                     employee_trust_holding, revised_status, submission_date, revision_date, published_at)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT (guid) DO NOTHING"""
     },
     {
         "name": "Statement of Deviation",
         "url": URL_STATEMENT_OF_DEVIATION,
         "parser": parsers.parse_statement_of_deviation_entry,
-        "sql": f"""INSERT OR IGNORE INTO {TABLE_NSE_STATEMENT_OF_DEVIATION}
+        "sql": f"""INSERT INTO {TABLE_NSE_STATEMENT_OF_DEVIATION}
                    (guid, title, link, period_end_date, published_at)
-                   VALUES (?, ?, ?, ?, ?)"""
+                   VALUES (%s, %s, %s, %s, %s) ON CONFLICT (guid) DO NOTHING"""
     },
     {
         "name": "Unit Holding Pattern",
         "url": URL_UNIT_HOLDING_PATTERN,
         "parser": parsers.parse_unit_holding_pattern_entry,
-        "sql": f"""INSERT OR IGNORE INTO {TABLE_NSE_UNIT_HOLDING_PATTERN}
+        "sql": f"""INSERT INTO {TABLE_NSE_UNIT_HOLDING_PATTERN}
                    (guid, title, link, as_on_date, published_at)
-                   VALUES (?, ?, ?, ?, ?)"""
+                   VALUES (%s, %s, %s, %s, %s) ON CONFLICT (guid) DO NOTHING"""
     },
     {
         "name": "Voting Results",
         "url": URL_VOTING_RESULTS,
         "parser": parsers.parse_voting_results_entry,
-        "sql": f"""INSERT OR IGNORE INTO {TABLE_NSE_VOTING_RESULTS}
+        "sql": f"""INSERT INTO {TABLE_NSE_VOTING_RESULTS}
                    (guid, title, link, meeting_date, published_at)
-                   VALUES (?, ?, ?, ?, ?)"""
+                   VALUES (%s, %s, %s, %s, %s) ON CONFLICT (guid) DO NOTHING"""
     },
     {
         "name": "Circulars",
         "url": URL_CIRCULARS,
         "parser": parsers.parse_circular_entry,
-        "sql": f"""INSERT OR IGNORE INTO {TABLE_NSE_CIRCULARS}
+        "sql": f"""INSERT INTO {TABLE_NSE_CIRCULARS}
                    (guid, title, link, published_at)
-                   VALUES (?, ?, ?, ?)"""
+                   VALUES (%s, %s, %s, %s) ON CONFLICT (guid) DO NOTHING"""
     },
 ]
