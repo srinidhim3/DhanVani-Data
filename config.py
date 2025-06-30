@@ -209,3 +209,12 @@ FEEDS_TO_PROCESS = [
                    VALUES (%s, %s, %s, %s) ON CONFLICT (guid) DO NOTHING"""
     },
 ]
+
+# --- Email Reporting Configuration ---
+# It's highly recommended to use environment variables for credentials.
+# For Gmail, you might need to create an "App Password".
+SMTP_SERVER = os.environ.get("SMTP_SERVER", "smtp.gmail.com")
+SMTP_PORT = int(os.environ.get("SMTP_PORT", 465))  # Use 465 for SSL
+SMTP_USER = os.environ.get("SMTP_USER")  # Your full email address
+SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD")  # Your app password
+EMAIL_RECIPIENTS = os.environ.get("EMAIL_RECIPIENTS", "srinidhim.kattimani@gmail.com")

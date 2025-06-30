@@ -33,7 +33,7 @@ def setup_database(conn: psycopg2.extensions.connection):
                 logger.error(f"Error executing {sql_file.name}: {e}")
                 raise
 
-def insert_data(conn: psycopg2.extensions.connection, entries: List[Any], sql_insert: str, parser_func: Callable[[Any], Tuple]):
+def insert_data(conn: psycopg2.extensions.connection, entries: List[Any], sql_insert: str, parser_func: Callable[[Any], Tuple]) -> int :
     """
     Generic function to insert new entries into a PostgreSQL database table.
     Skips entries that already exist based on the 'guid' (via INSERT ON CONFLICT DO NOTHING).
@@ -56,3 +56,4 @@ def insert_data(conn: psycopg2.extensions.connection, entries: List[Any], sql_in
 
     table_name = sql_insert.split("INTO")[1].strip().split()[0]
     logger.info(f"Processed {len(entries)} entries. Inserted {new_entries_count} new records into {table_name}.")
+    return new_entries_count
