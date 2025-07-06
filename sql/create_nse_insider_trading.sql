@@ -4,5 +4,7 @@ CREATE TABLE IF NOT EXISTS nse_insider_trading (
     title TEXT NOT NULL,
     link TEXT,
     security_type TEXT,
-    published_at TEXT NOT NULL
+    published_at TEXT NOT NULL,
+    company_symbol text,
+    summary text
 );

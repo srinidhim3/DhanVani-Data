@@ -4,5 +4,7 @@ CREATE TABLE IF NOT EXISTS nse_brsr (
     title TEXT NOT NULL,
     pdf_link TEXT,
     xml_link_name TEXT,
-    submission_date TEXT NOT NULL
+    submission_date TEXT NOT NULL,
+    company_symbol text,
+    summary text
 );
