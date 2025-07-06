@@ -10,5 +10,7 @@ CREATE TABLE IF NOT EXISTS nse_shareholding_pattern (
     revised_status TEXT,
     submission_date TEXT NOT NULL,
     revision_date TEXT,
-    published_at TEXT NOT NULL
+    published_at TEXT NOT NULL,
+    company_symbol text,
+    summary text
 );

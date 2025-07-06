@@ -4,5 +4,7 @@ CREATE TABLE IF NOT EXISTS nse_reason_for_encumbrance (
     title TEXT NOT NULL,
     link TEXT,
     promoter_name TEXT,
-    published_at TEXT
+    published_at TEXT,
+    company_symbol text,
+    summary text
 );

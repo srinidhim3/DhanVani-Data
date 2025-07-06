@@ -6,5 +6,7 @@ CREATE TABLE IF NOT EXISTS nse_secretarial_compliance (
     xml_link TEXT,
     financial_year TEXT,
     submission_type TEXT,
-    published_at TEXT NOT NULL
+    published_at TEXT NOT NULL,
+    company_symbol text,
+    summary text
 );

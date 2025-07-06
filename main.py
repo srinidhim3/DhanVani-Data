@@ -33,7 +33,7 @@ def main():
         logger.info(f"Successfully connected to database.")
 
         # Ensure all tables are created before proceeding
-        database.setup_database(conn)
+        # database.setup_database(conn)
         with requests.Session() as session:
             # Fetch all feeds concurrently for better performance
             with concurrent.futures.ThreadPoolExecutor(max_workers=len(config.FEEDS_TO_PROCESS)) as executor:

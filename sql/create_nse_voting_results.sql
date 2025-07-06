@@ -4,5 +4,7 @@ CREATE TABLE IF NOT EXISTS nse_voting_results (
     title TEXT NOT NULL,
     link TEXT,
     meeting_date TEXT NOT NULL,
-    published_at TEXT NOT NULL
+    published_at TEXT NOT NULL,
+    company_symbol text,
+    summary text
 );
