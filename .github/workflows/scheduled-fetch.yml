@@ -1,31 +1,29 @@
 name: Process and Summarize NSE Data
 
 on:
-  workflow_dispatch: # Allows manual triggering from the Actions tab
+  workflow_dispatch: # Allows manual triggering
   schedule:
-    # Runs at the start of every hour. You can adjust the cron schedule as needed.
-    # See https://crontab.guru/ for help.
+    # Runs at the start of every hour.
     - cron: "0 * * * *"
 
 jobs:
-  fetch:
+  fetch-data:
     runs-on: ubuntu-latest
-    env: # Define secrets for all steps in the job
+    env:
       DB_CONNECTION_STRING: ${{ secrets.DB_CONNECTION_STRING }}
-      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       SMTP_USER: ${{ secrets.SMTP_USER }}
       SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
       EMAIL_RECIPIENTS: ${{ secrets.EMAIL_RECIPIENTS }}
     steps:
-      - name: 1. Checkout repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: 2. Set up Python
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.10" # Match your development version
+          python-version: "3.10"
 
-      - name: 3. Cache pip dependencies
+      - name: Cache pip dependencies
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
@@ -33,39 +31,62 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
-      - name: 4. Install dependencies
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: 5. Run data fetcher
+      - name: Run data fetcher
         run: python main.py
 
-#  summarize:
-#    runs-on: ubuntu-latest
-#    needs: fetch # This job will only run if the 'fetch' job completes successfully
-#    env:
-#      DB_CONNECTION_STRING: ${{ secrets.DB_CONNECTION_STRING }}
-#      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-#    steps:
-#      - name: 1. Checkout repository
-#        uses: actions/checkout@v4
-#
-#      - name: 2. Set up Python
-#        uses: actions/setup-python@v5
-#        with:
-#          python-version: "3.10"
-#
-#      - name: 3. Cache pip dependencies
-#        uses: actions/cache@v4
-#        with:
-#          path: ~/.cache/pip
-#          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-#          restore-keys: |
-#            ${{ runner.os }}-pip-
-#
-#      - name: 4. Install dependencies
-#        run: pip install -r requirements.txt
-#
-#      - name: 5. Run AI summarizer
-#        run: python summarize_articles.py
+  check-time:
+    runs-on: ubuntu-latest
+    outputs:
+      run_summarizer: ${{ steps.check_hour.outputs.run_summarizer }}
+    steps:
+      - name: Check current UTC hour for discount window
+        id: check_hour
+        run: |
+          HOUR=$(date -u +'%H')
+          # Discount window is 16:30-00:30 UTC. Cron runs at HH:00.
+          # Run at 17, 18, 19, 20, 21, 22, 23, and 00 UTC.
+          if (( HOUR >= 17 || HOUR == 0 )); then
+            echo "Current hour ($HOUR) is within the discount window. Enabling summarizer job."
+            echo "run_summarizer=true" >> $GITHUB_OUTPUT
+          else
+            echo "Current hour ($HOUR) is outside the discount window. Skipping summarizer job."
+            echo "run_summarizer=false" >> $GITHUB_OUTPUT
+          fi
+
+  summarize-articles:
+    runs-on: ubuntu-latest
+    needs: [fetch-data, check-time]
+    # Run if manually triggered, OR if it's the right time on a schedule.
+    if: github.event_name == 'workflow_dispatch' || needs.check-time.outputs.run_summarizer == 'true'
+    env:
+      DB_CONNECTION_STRING: ${{ secrets.DB_CONNECTION_STRING }}
+      DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run AI summarizer
+        run: python summarize_articles.py

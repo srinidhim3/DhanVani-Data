@@ -3,5 +3,5 @@ feedparser
 psycopg2-binary
 python-dotenv
 PyMuPDF
-google-generativeai
 lxml
+openai
