@@ -6,6 +6,12 @@ on:
     # Runs at the start of every hour.
     - cron: "0 * * * *"
 
+concurrency:
+  # Ensures that only one instance of this workflow runs at a time.
+  # If a new run is triggered while one is already running, it will be queued.
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
 jobs:
   fetch-data:
     runs-on: ubuntu-latest
