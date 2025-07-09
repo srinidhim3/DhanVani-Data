@@ -2,6 +2,7 @@ import logging
 import os
 import psycopg2
 from dotenv import load_dotenv
+from datetime import datetime, time, timezone
 
 from ai_summarizer import AISummarizer
 
@@ -33,6 +34,18 @@ TABLES_TO_SUMMARIZE = [
     {"name": "nse_circulars", "pk_col": "guid", "url_col": "link"},
 ]
 
+def is_within_summarization_window() -> bool:
+    """Checks if the current UTC time is within the allowed window (16:30-00:30 UTC)."""
+    now_utc = datetime.now(timezone.utc).time()
+    start_time = time(16, 30)
+    end_time = time(0, 30)
+
+    # The window spans midnight, so we check two ranges:
+    # 1. From 16:30 to 23:59:59 (now_utc >= start_time)
+    # 2. From 00:00:00 to 00:30 (now_utc <= end_time)
+    return now_utc >= start_time or now_utc <= end_time
+
+
 def get_db_connection():
     """Establishes and returns a database connection."""
     load_dotenv()
@@ -46,6 +59,7 @@ def process_table(conn, summarizer, table_config):
     """
     Fetches unsummarized records from a table, generates summaries,
     and updates the database.
+    Returns False if processing was halted due to time constraints, True otherwise.
     """
     table_name = table_config["name"]
     pk_col = table_config["pk_col"]
@@ -73,11 +87,18 @@ def process_table(conn, summarizer, table_config):
 
             logger.info(f"Found {len(records_to_process)} articles to summarize in '{table_name}'.")
 
-            for pk_val, url in records_to_process:
+            for i, (pk_val, url) in enumerate(records_to_process):
+                # Check time before processing each record. If the window has closed,
+                # stop processing for this table and signal the main loop to exit.
+                if not is_within_summarization_window():
+                    now_utc = datetime.now(timezone.utc).time()
+                    logger.info(f"Current UTC time {now_utc.strftime('%H:%M')} is outside the summarization window. Stopping processing for '{table_name}'.")
+                    return False
+
                 if not url:
                     continue
 
-                logger.info(f"Summarizing URL: {url}")
+                logger.info(f"[{i+1}/{len(records_to_process)}] Summarizing URL: {url}")
                 try:
                     summary = summarizer.summarize(url)
                     logger.info(f"Generated summary: {summary}")
@@ -106,12 +127,21 @@ def process_table(conn, summarizer, table_config):
 
             logger.info(f"Committed {updated_count} summary updates for table '{table_name}'.")
 
+            return True # Finished normally
+
         except psycopg2.Error as e:
             logger.error(f"Database error while processing table '{table_name}': {e}")
             conn.rollback() # Rollback any partial changes from the failed transaction
+            return False # Indicate error
 
 def main():
     """Main function to orchestrate the summarization process."""
+    # Initial check to prevent starting the process outside the allowed window.
+    if not is_within_summarization_window():
+        now_utc = datetime.now(timezone.utc).time()
+        logger.info(f"Current UTC time {now_utc.strftime('%H:%M')} is outside the summarization window (16:30-00:30 UTC). Exiting.")
+        return
+
     logger.info("--- Starting AI Summarization Process ---")
     conn = None
     try:
@@ -119,7 +149,9 @@ def main():
         conn = get_db_connection()
 
         for table_config in TABLES_TO_SUMMARIZE:
-            process_table(conn, summarizer, table_config)
+            if not process_table(conn, summarizer, table_config):
+                logger.info("Time window closed or an error occurred. Halting further table processing.")
+                break
 
     except (ValueError, psycopg2.Error) as e:
         logger.critical(f"A critical setup error occurred: {e}")
