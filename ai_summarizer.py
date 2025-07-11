@@ -81,21 +81,41 @@ class AISummarizer:
             return ""
 
     def _get_text_from_url(self, url: str) -> Optional[str]:
-        """Fetches content from a URL, determines file type, and extracts text."""
-        try:
-            headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-            }
-            # Use a single request to get headers and content
-            response = requests.get(url, headers=headers, timeout=30)
-            response.raise_for_status()
-            content = response.content
-            content_type = response.headers.get("content-type", "").lower()
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Error fetching or reading URL {url}: {e}")
+        """
+        Fetches content from a URL, determines file type, and extracts text.
+        If a URL with '/corporate/' fails, it attempts a fallback.
+        """
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        }
+
+        urls_to_try = [url]
+        if "/corporate/" in url:
+            fallback_url = url.replace("/corporate/", "/content/debt/WDM/")
+            urls_to_try.append(fallback_url)
+
+        response = None
+        for i, current_url in enumerate(urls_to_try):
+            try:
+                logger.info(f"Attempting to fetch URL ({i+1}/{len(urls_to_try)}): {current_url}")
+                response = requests.get(current_url, headers=headers, timeout=30)
+                response.raise_for_status()
+                # If successful, break the loop
+                break
+            except requests.exceptions.RequestException as e:
+                logger.warning(f"Failed to fetch {current_url}: {e}")
+                response = None  # Ensure response is None on failure
+                continue  # Try the next URL if available
+
+        if not response:
+            logger.error(f"All attempts to fetch content from original URL and fallbacks failed for: {url}")
             return None
 
+        content = response.content
+        content_type = response.headers.get("content-type", "").lower()
+
         # Determine file type by extension first, then by content-type
+        # Use original URL for extension check, as fallback might not have it.
         url_lower = url.lower()
         if ".pdf" in url_lower or "application/pdf" in content_type:
             return self._extract_text_from_pdf(content)
